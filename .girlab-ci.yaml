@@ -1,0 +1,68 @@
+stages:
+  - dependencies
+  - main
+  - deploy
+
+default:
+  image: node:22.11.0
+  retry: 2
+
+workflow:
+  name: test
+
+dependencies:
+  stage: dependencies
+  cache:
+    key:
+      files:
+        - yarn.lock
+    paths:
+      - node_modules/
+      - yarn.lock
+  script:
+    - yarn install
+
+linters:
+  stage: main
+  needs: [dependencies]
+  cache:
+    policy: pull
+    key:
+      files:
+        - yarn.lock
+    paths:
+      - node_modules/
+      - yarn.lock
+  script:
+    - yarn run linters
+
+build:
+  stage: main
+  needs: [dependencies]
+  cache:
+    key:
+      files:
+        - yarn.lock
+    paths:
+      - dist/
+      - node_modules/
+      - yarn.lock
+  script:
+    - yarn run build
+    - ls
+
+deploy:
+  stage: deploy
+  needs: [dependencies, build]
+  cache:
+    policy: pull
+    key:
+      files:
+        - yarn.lock
+    paths:
+      - node_modules/
+      - dist/
+      - yarn.lock
+  script:
+    - ls
+    - yarn run deploy
